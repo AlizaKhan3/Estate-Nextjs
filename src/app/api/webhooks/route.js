@@ -22,11 +22,12 @@ export async function POST(req) {
                 );
                 if (user && eventType === 'user.created') {
                     try {
-                        await clerkClient.users.updateUserMetadata(id, {
+                        await clerkClient.users.updateUser(id, {
                             publicMetadata: {
-                                userMongoId: user._id
+                                userMongoId: user._id.toString()
                             }
                         })
+                        console.log("ye rahi id ",user._id);
                     } catch (error) {
                         console.log("Error: Could not update metadata:", error.message)
                     }
