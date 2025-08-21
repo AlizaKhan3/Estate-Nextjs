@@ -2,19 +2,25 @@ import mongoose from "mongoose";
 
 // --------------Connection with  Mongodb db Compass---------
 const MONGODB_URI = process.env.MONGODB_URI
-const mongoose = { conn: null, promise: null }
+// const global.mongoose = { conn: null, promise: null }
+
+if (MONGODB_URI) {
+    throw new Error("Please define the MONGODB_URI environment variable")
+}
 
 let cached = global.mongoose
+
 if (!cached) {
     cached = global.mongoose = { conn: null, promise: null }
 }
+
 export const connectionToDb = async () => {
-    if(cached.conn) {
+    if (cached.conn) {
         return cached.conn
     }
-    if(!cached.promise){
+    if (!cached.promise) {
         const opts = {
-            bufferCommands : false
+            bufferCommands: false
         }
         cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongo) => {
             return mongo
@@ -23,7 +29,7 @@ export const connectionToDb = async () => {
             cached.conn = await cached.promise
         } catch (error) {
             cached.promise = null
-            throw error         
+            throw error
         }
     }
     return cached.conn
@@ -41,7 +47,7 @@ export const connectionToDb = async () => {
 //     mongoose.set('strictQuery', true);
 //     if(initialized) {
 //         console.log("Mongodb already connected");
-//         return; 
+//         return;
 //     }
 //     try {
 //         await mongoose.connect(MONGODB_URI, {
