@@ -20,18 +20,36 @@ export async function POST(req) {
                 const user = await createOrUpdateUser(
                     id, first_name, last_name, imager_url, email_addresses
                 );
+                // if (user && eventType === 'user.created') {
+                //     try {
+                //         await clerkClient.users.updateUser(id, {
+                //             publicMetadata: {
+                //                 userMongoId: user._id.toString()
+                //             }
+                //         })
+                //         console.log("ye rahi id ",user._id);
+                //     } catch (error) {
+                //         console.log("Error: Could not update metadata:", error.message)
+                //     }
+                // }
+
+                
                 if (user && eventType === 'user.created') {
                     try {
+                        console.log("➡️ Updating Clerk metadata for user:", id, "with MongoId:", user._id.toString())
+
                         await clerkClient.users.updateUser(id, {
                             publicMetadata: {
                                 userMongoId: user._id.toString()
                             }
                         })
-                        console.log("ye rahi id ",user._id);
+
+                        console.log("✅ Metadata updated successfully")
                     } catch (error) {
-                        console.log("Error: Could not update metadata:", error.message)
+                        console.log("❌ Error: Could not update metadata:", error.message)
                     }
                 }
+
             } catch (error) {
                 console.log("Error: Could not create or update user:", error.message)
                 return new Response("Error: Could not create or update user", {
