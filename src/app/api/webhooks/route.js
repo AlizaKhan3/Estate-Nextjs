@@ -153,6 +153,35 @@ export async function POST(req) {
     const { id } = evt?.data;
     const eventType = evt?.type;
 
+    // if (eventType === 'user.created' || eventType === 'user.updated') {
+    //     const { first_name, last_name, image_url, email_addresses } = evt?.data;
+    //     try {
+    //         const user = await createOrUpdateUser(
+    //             id,
+    //             first_name,
+    //             last_name,
+    //             image_url,
+    //             email_addresses
+    //         );
+    //         if (user && (eventType === 'user.created' || eventType === 'user.updated')) {
+    //             try {
+    //                 await clerkClient.users.updateUser(id, {
+    //                     publicMetadata: {
+    //                         userMongoId: user._id.toString(),
+    //                     },
+    //                 });
+    //             } catch (error) {
+    //                 console.log('Error: Could not update user metadata:', error);
+    //             }
+    //         }
+    //     } catch (error) {
+    //         console.log('Error: Could not create or update user:', error);
+    //         return new Response('Error: Could not create or update user', {
+    //             status: 400,
+    //         });
+    //     }
+    // }
+
     if (eventType === 'user.created' || eventType === 'user.updated') {
         const { first_name, last_name, image_url, email_addresses } = evt?.data;
         try {
@@ -163,22 +192,17 @@ export async function POST(req) {
                 image_url,
                 email_addresses
             );
-            if (user && eventType === 'user.created') {
-                try {
-                    await clerkClient.users.updateUser(id, {
-                        publicMetadata: {
-                            userMongoId: user._id,
-                        },
-                    });
-                } catch (error) {
-                    console.log('Error: Could not update user metadata:', error);
-                }
+
+            if (user) {
+                await clerkClient.users.updateUser(id, {
+                    publicMetadata: {
+                        userMongoId: user._id.toString(),
+                    },
+                });
+                console.log("✅ Metadata set for Clerk user:", id, "→", user._id.toString());
             }
         } catch (error) {
-            console.log('Error: Could not create or update user:', error);
-            return new Response('Error: Could not create or update user', {
-                status: 400,
-            });
+            console.log("❌ Error in user create/update:", error);
         }
     }
 
