@@ -9,7 +9,11 @@ export const createOrUpdateUser = async (
     email_addresses
 ) => {
     try {
+        console.log("📌 DB connected, creating/updating user:", id);
+
         await connectionToDb();
+        console.log("📌 DB connected, creating/updating user:", id);
+
         const user = await User.findOneAndUpdate(
             { clerkId: id },
             {

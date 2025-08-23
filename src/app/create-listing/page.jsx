@@ -1,15 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-// import { app } from '../../firebase';
+import { app } from '../../firebase';
 
-// import {
-//   getStorage,
-//   ref,
-//   uploadBytesResumable,
-//   getDownloadURL,
-// } from 'firebase/storage';
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from 'firebase/storage';
 
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
@@ -30,7 +30,7 @@ export default function CreateListing() {
     type: 'rent',
     bedrooms: 1,
     bathrooms: 1,
-    regularPrice: 50,
+    regularPrice: 100,
     discountPrice: 0,
     offer: false,
     parking: false,
@@ -126,16 +126,94 @@ export default function CreateListing() {
       });
     }
   };
+  // Fetch MongoDB user ID when component loads
+  // useEffect(() => {
+  //   if (user && user.id) {
+  //     fetchMongoUserId();
+  //   }
+  // }, [user]);
+
+  // const fetchMongoUserId = async () => {
+  //   try {
+  //     const res = await fetch('/api/get-user-by-clerk-id', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ clerkId: user.id }),
+  //     });
+
+  //     const data = await res.json();
+  //     if (data.mongoUserId) {
+  //       setMongoUserId(data.mongoUserId);
+  //     } else {
+  //       console.error('MongoDB user ID not found');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching MongoDB user ID:', error);
+  //   }
+  // };
+
+
+  useEffect(() => {
+    if (user && user.id) {
+      fetchMongoUserId();
+    }
+  }, [user]);
+
+  const fetchMongoUserId = async () => {
+    try {
+      console.log('Fetching MongoDB ID for clerkId:', user.id);
+
+      const res = await fetch('/api/get-user-by-clerk-id', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ clerkId: user.id }),
+      });
+
+      console.log('API response status:', res.status);
+
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
+      }
+
+      const data = await res.json();
+      console.log('API response data:', data);
+
+      if (data.mongoUserId) {
+        setMongoUserId(data.mongoUserId);
+        console.log('MongoDB user ID set:', data.mongoUserId);
+      } else if (data.error) {
+        console.error('API error:', data.error);
+        setError('Could not find user information. Please try again later.');
+      } else {
+        console.error('MongoDB user ID not found in response');
+        setError('User information not available. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error fetching MongoDB user ID:', error);
+      setError('Failed to load user information. Please refresh the page.');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      if (!mongoUserId) {
+        setError('User information not available. Please try again.');
+        return;
+      }
+
       if (formData.imageUrls.length < 1)
         return setError('You must upload at least one image');
       if (+formData.regularPrice < +formData.discountPrice)
         return setError('Discount price must be lower than regular price');
+
       setLoading(true);
       setError(false);
+
       const res = await fetch('/api/listing/create', {
         method: 'POST',
         headers: {
@@ -143,20 +221,53 @@ export default function CreateListing() {
         },
         body: JSON.stringify({
           ...formData,
-          userMongoId: user.publicMetadata.userMogoId,
+          userMongoId: mongoUserId, // Use the fetched MongoDB ID
         }),
       });
+
       const data = await res.json();
       setLoading(false);
       if (data.success === false) {
         setError(data.message);
+      } else {
+        router.push(`/listing/${data._id}`);
       }
-      router.push(`/listing/${data._id}`);
     } catch (error) {
       setError(error.message);
       setLoading(false);
     }
   };
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     if (formData.imageUrls.length < 1)
+  //       return setError('You must upload at least one image');
+  //     if (+formData.regularPrice < +formData.discountPrice)
+  //       return setError('Discount price must be lower than regular price');
+  //     setLoading(true);
+  //     setError(false);
+  //     const res = await fetch('/api/listing/create', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         ...formData,
+  //         userMongoId: user.publicMetadata.userMongoId,
+  //       }),
+  //     });
+  //     console.log("see----", user.publicMetadata);
+  //     const data = await res.json();
+  //     setLoading(false);
+  //     if (data.success === false) {
+  //       setError(data.message);
+  //     }
+  //     router.push(`/listing/${data._id}`);
+  //   } catch (error) {
+  //     setError(error.message);
+  //     setLoading(false);
+  //   }
+  // };
 
   if (!isLoaded) {
     return (

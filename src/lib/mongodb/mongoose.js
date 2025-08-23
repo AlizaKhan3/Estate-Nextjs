@@ -16,6 +16,7 @@ if (!cached) {
 
 export const connectionToDb = async () => {
     if (cached.conn) {
+        console.log("✅ Connected to DB")
         return cached.conn
     }
     if (!cached.promise) {
@@ -29,6 +30,7 @@ export const connectionToDb = async () => {
             cached.conn = await cached.promise
         } catch (error) {
             cached.promise = null
+            console.error("❌ MongoDB connection error:", error);
             throw error
         }
     }
