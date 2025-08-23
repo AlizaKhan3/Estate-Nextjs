@@ -40,12 +40,12 @@
 
 import Listing from '@/lib/models/listing.model';
 import User from '@/lib/models/user.model';
-import { connectToDB } from '@/lib/mongoose';
+import { connectionToDb } from '@/lib/mongodb/mongoose';
 import { getAuth } from '@clerk/nextjs/server';
 
 export const POST = async (req) => {
   try {
-    await connectToDB();
+    await connectionToDb();
 
     // Get the authenticated user from Clerk
     const { userId } = getAuth(req);
