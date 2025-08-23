@@ -152,5 +152,5 @@ if (eventType === 'user.created' || eventType === 'user.updated') {
         }
     }
 
-    return new Response('Webhook received', { status: 200 });
+    return "status: SUCCESS"
 }
